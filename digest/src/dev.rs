@@ -4,7 +4,7 @@ use core::fmt::Debug;
 
 #[macro_export]
 macro_rules! new_test {
-    ($name:ident, $test_name:expr, $hasher:ident, $test_func:expr) => {
+    ($name:ident, $test_name:expr, $hasher:ty, $test_func:expr) => {
         #[test]
         fn $name() {
             let inputs = include_bytes!(
@@ -16,7 +16,7 @@ macro_rules! new_test {
 
             // u16 (2 bytes); start + end (x2); input, output (x2)
             assert_eq!(index.len() % (2*2*2), 0, "invlaid index length");
-            let mut hasher = $hasher::default();
+            let mut hasher = <$hasher>::default();
             for (i, chunk) in index.chunks(2*2*2).enumerate() {
                 // proper aligment is assumed here
                 let mut idx = unsafe {
@@ -101,8 +101,8 @@ impl super::FixedOutput for Dummy {
 }
 
 new_test!(dummy_test, "dummy", Dummy, digest_test);
-*/
 
+*/
 /*
 
 pub struct Test {
