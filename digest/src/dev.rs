@@ -1,6 +1,50 @@
 use super::{Digest, Input, VariableOutput, ExtendableOutput, XofReader};
 use core::fmt::Debug;
 
+
+#[macro_export]
+macro_rules! new_test {
+    ($name:ident, $test_name:expr, $digest:ty, $test_func:expr) => {
+        #[test]
+        fn $name() {
+            let inputs = include_bytes!(
+                concat!("data/", $test_name, ".inputs.bin"));
+            let outputs = include_bytes!(
+                concat!("data/", $test_name, ".outputs.bin"));
+            let index = include_bytes!(
+                concat!("data/", $test_name, ".index.bin"));
+
+            // u32 (2 bytes); start + end (x2); input, output (x2)
+            assert_eq!(index.len() % (2*2*2), 0, "invlaid index length");
+            for (i, chunk) in index.chunks(2*2*2).enumerate() {
+                // proper aligment is assumed here
+                let mut idx = unsafe {
+                    *(chunk.as_ptr() as *const [[u16; 2]; 2])
+                };
+                // convert to LE for BE machine
+                for val in idx.iter_mut() {
+                    for i in val.iter_mut() { *i = i.to_le(); }
+                }
+                let input = &inputs[(idx[0][0] as usize)..(idx[0][1] as usize)];
+                let output = &outputs[
+                    (idx[1][0] as usize)..(idx[1][1] as usize)];
+                if !$test_func::<$digest>(input, output) {
+                    panic!("\n\
+                        Failed test №{}\n\
+                        input: [{}..{}]\t{:?}\n\
+                        output: [{}..{}]\t{:?}\n",
+                        i,
+                        idx[0][0], idx[0][1], input,
+                        idx[1][0], idx[1][1], output,
+                    );
+                }
+            }
+
+        }
+    }
+}
+/*
+
 pub struct Test {
     pub name: &'static str,
     pub input: &'static [u8],
@@ -127,6 +171,7 @@ pub fn run_xof_tests<D>(tests: &[Test])
         assert_eq!(out[..], t.output[..]);
     }
 }
+*/
 
 pub fn run_1mil_a_test<D: Digest + Default + Debug + Clone>(expected: &[u8]) {
     let mut sh = D::default();
