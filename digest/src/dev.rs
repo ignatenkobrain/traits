@@ -4,7 +4,7 @@ use core::fmt::Debug;
 
 #[macro_export]
 macro_rules! new_test {
-    ($name:ident, $test_name:expr, $hasher:ty, $test_func:expr) => {
+    ($name:ident, $test_name:expr, $hasher:expr, $test_func:expr) => {
         #[test]
         fn $name() {
             let inputs = include_bytes!(
@@ -14,7 +14,7 @@ macro_rules! new_test {
             let index = include_bytes!(
                 concat!("data/", $test_name, ".index.bin"));
 
-            // u32 (2 bytes); start + end (x2); input, output (x2)
+            // u16 (2 bytes); start + end (x2); input, output (x2)
             assert_eq!(index.len() % (2*2*2), 0, "invlaid index length");
             let hasher = $hasher::default();
             for (i, chunk) in index.chunks(2*2*2).enumerate() {
