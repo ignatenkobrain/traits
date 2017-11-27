@@ -84,3 +84,21 @@ pub trait ExtendableOutput {
     /// Retrieve XOF reader and reset hasher instance.
     fn xof_result(&mut self) -> Self::Reader;
 }
+
+#[cfg(feature = "std")]
+#[macro_export]
+/// Implements `std::io::Write` trait for implementator of `Input`
+macro_rules! impl_write {
+    ($hasher:ident) => {
+        impl ::std::io::Write for $hasher {
+            fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
+                self.process(buf);
+                Ok(buf.len())
+            }
+
+            fn flush(&mut self) -> ::std::io::Result<()> {
+                Ok(())
+            }
+        }
+    }
+}
