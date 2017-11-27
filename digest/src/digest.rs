@@ -1,5 +1,6 @@
 use super::{Input, FixedOutput};
 use generic_array::GenericArray;
+use generic_array::typenum::Unsigned;
 #[cfg(feature = "std")]
 use std::io;
 
@@ -18,7 +19,7 @@ pub trait Digest: Input + FixedOutput + Default {
     /// Digest input data. This method can be called repeatedly
     /// for use with streaming messages.
     fn input(&mut self, buf: &[u8]) {
-        <Self as Input>::input(self, buf);
+        self.process(buf);
     }
 
     /// Retrieve result and reset hasher instance
@@ -28,7 +29,7 @@ pub trait Digest: Input + FixedOutput + Default {
 
     /// Get output size of the hasher
     fn output_size() -> usize {
-        <Self as FixedOutput>::output_size()
+        Self::OutputSize::to_usize()
     }
 
     /// Convinience function to compute hash of the `data`. It will handle
@@ -42,7 +43,7 @@ pub trait Digest: Input + FixedOutput + Default {
     #[inline]
     fn digest(data: &[u8]) -> Output<Self::OutputSize> {
         let mut hasher = Self::default();
-        <Self as Input>::input(&mut hasher, data);
+        hasher.input(data);
         hasher.fixed_result()
     }
 
@@ -77,7 +78,7 @@ pub trait Digest: Input + FixedOutput + Default {
         let mut buffer = [0u8; 1024];
         loop {
             let bytes_read = source.read(&mut buffer)?;
-            <Self as Input>::input(&mut hasher, &buffer[..bytes_read]);
+            hasher.input(&buffer[..bytes_read]);
             if bytes_read == 0 {
                 break;
             }

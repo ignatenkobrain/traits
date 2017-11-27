@@ -10,7 +10,6 @@ pub extern crate generic_array;
 #[cfg(feature = "std")]
 use std as core;
 use generic_array::{GenericArray, ArrayLength};
-use generic_array::typenum::Unsigned;
 
 mod digest;
 #[cfg(feature = "dev")]
@@ -22,7 +21,7 @@ pub use digest::Digest;
 pub trait Input {
     /// Digest input data. This method can be called repeatedly, e.g. for
     /// processing streaming messages.
-    fn input(&mut self, buf: &[u8]);
+    fn process(&mut self, buf: &[u8]);
 }
 
 /// Trait to indicate that digest function processes data in blocks of size
@@ -34,11 +33,6 @@ pub trait BlockInput {
 /// Trait for returning digest result with the fixed size
 pub trait FixedOutput {
     type OutputSize: ArrayLength<u8>;
-
-    /// Get output size of the hasher
-    fn output_size() -> usize {
-        Self::OutputSize::to_usize()
-    }
 
     /// Retrieve result and reset hasher instance.
     fn fixed_result(&mut self) -> GenericArray<u8, Self::OutputSize>;

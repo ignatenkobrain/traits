@@ -1,4 +1,4 @@
-//use super::{Digest, Input, VariableOutput, ExtendableOutput, XofReader};
+use super::{Digest, Input, VariableOutput, ExtendableOutput, XofReader};
 use core::fmt::Debug;
 
 
@@ -44,20 +44,20 @@ macro_rules! new_test {
     }
 }
 
-pub fn digest_test<D>(input: &[u8], output: &[u8]) -> Some(&'static str)
-    where D: super::Digest + Debug + Clone
+pub fn digest_test<D>(input: &[u8], output: &[u8]) -> Option<&'static str>
+    where D: Digest + Debug + Clone
 {
     let mut sh = D::default();
     // Test that it works when accepting the message all at once
     sh.input(input);
     if sh.result().as_slice() != output {
-        return "whole message";
+        return Some("whole message");
     }
 
     // Test if reset works correctly
     sh.input(input);
     if sh.result().as_slice() != output {
-        return "whole message after reset";
+        return Some("whole message after reset");
     }
 
     // Test that it works when accepting the message in pieces
@@ -65,11 +65,11 @@ pub fn digest_test<D>(input: &[u8], output: &[u8]) -> Some(&'static str)
     let mut left = len;
     while left > 0 {
         let take = (left + 1) / 2;
-        sh.input(&t.input[len - left..take + len - left]);
+        sh.input(&input[len - left..take + len - left]);
         left = left - take;
     }
     if sh.result().as_slice() != output {
-        return "message in pieces";
+        return Some("message in pieces");
     }
 
     // Test processing byte-by-byte
@@ -77,8 +77,9 @@ pub fn digest_test<D>(input: &[u8], output: &[u8]) -> Some(&'static str)
         sh.input(chunk)
     }
     if sh.result().as_slice() != output {
-        return "message byte-by-byte";
+        return Some("message byte-by-byte");
     }
+    None
 }
 
 /*
@@ -212,10 +213,8 @@ pub fn run_xof_tests<D>(tests: &[Test])
 */
 
 pub fn run_1mil_a_test<D>(expected: &[u8])
-    where D: super::Digest + Default + Debug + Clone
+    where D: Digest + Default + Debug + Clone
 {
-    use super::Digest;
-
     let mut sh = D::default();
     for _ in 0..50_000 {
         sh.input(&[b'a'; 10]);
