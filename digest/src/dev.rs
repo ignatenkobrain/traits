@@ -212,7 +212,7 @@ pub fn run_xof_tests<D>(tests: &[Test])
 }
 */
 
-pub fn run_1mil_a_test<D>(expected: &[u8])
+pub fn one_million_a<D>(expected: &[u8])
     where D: Digest + Default + Debug + Clone
 {
     let mut sh = D::default();
