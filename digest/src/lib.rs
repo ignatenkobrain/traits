@@ -62,7 +62,7 @@ pub trait VariableOutput: core::marker::Sized {
     /// method, otherwise `Err(InvalidBufferLength)` will be returned without
     /// resetting hasher.
     fn variable_result(&mut self, buffer: &mut [u8])
-        -> Result<&[u8], InvalidBufferLength>;
+        -> Result<(), InvalidBufferLength>;
 }
 
 /// Trait for decribing readers which are used to extract extendable output
