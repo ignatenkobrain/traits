@@ -82,7 +82,6 @@ pub trait ExtendableOutput {
     fn xof_result(&mut self) -> Self::Reader;
 }
 
-#[cfg(feature = "std")]
 #[macro_export]
 /// Implements `std::io::Write` trait for implementator of `Input`
 macro_rules! impl_write {
