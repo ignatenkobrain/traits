@@ -28,12 +28,12 @@ macro_rules! new_test {
                 let input = &inputs[(idx[0][0] as usize)..(idx[0][1] as usize)];
                 let output = &outputs[
                     (idx[1][0] as usize)..(idx[1][1] as usize)];
-                if !$test_func::<$digest>(input, output) {
+                if let Some(desc) = $test_func::<$digest>(input, output) {
                     panic!("\n\
-                        Failed test №{}\n\
+                        Failed test №{}: {}\n\
                         input: [{}..{}]\t{:?}\n\
                         output: [{}..{}]\t{:?}\n",
-                        i,
+                        i, desc,
                         idx[0][0], idx[0][1], input,
                         idx[1][0], idx[1][1], output,
                     );
@@ -43,6 +43,44 @@ macro_rules! new_test {
         }
     }
 }
+
+pub fn digest_test<D>(input: &[u8], output: &[u8]) -> Some(&'static str)
+    where D: super::Digest + Debug + Clone
+{
+    let mut sh = D::default();
+    // Test that it works when accepting the message all at once
+    sh.input(input);
+    if sh.result().as_slice() != output {
+        return "whole message";
+    }
+
+    // Test if reset works correctly
+    sh.input(input);
+    if sh.result().as_slice() != output {
+        return "whole message after reset";
+    }
+
+    // Test that it works when accepting the message in pieces
+    let len = input.len();
+    let mut left = len;
+    while left > 0 {
+        let take = (left + 1) / 2;
+        sh.input(&t.input[len - left..take + len - left]);
+        left = left - take;
+    }
+    if sh.result().as_slice() != output {
+        return "message in pieces";
+    }
+
+    // Test processing byte-by-byte
+    for chunk in input.chunks(1) {
+        sh.input(chunk)
+    }
+    if sh.result().as_slice() != output {
+        return "message byte-by-byte";
+    }
+}
+
 /*
 
 pub struct Test {
