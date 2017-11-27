@@ -4,7 +4,7 @@ use core::fmt::Debug;
 
 #[macro_export]
 macro_rules! new_test {
-    ($name:ident, $test_name:expr, $digest:ty, $test_func:expr) => {
+    ($name:ident, $test_name:expr, $hasher:ty, $test_func:expr) => {
         #[test]
         fn $name() {
             let inputs = include_bytes!(
@@ -16,6 +16,7 @@ macro_rules! new_test {
 
             // u32 (2 bytes); start + end (x2); input, output (x2)
             assert_eq!(index.len() % (2*2*2), 0, "invlaid index length");
+            let hasher = $hasher::default();
             for (i, chunk) in index.chunks(2*2*2).enumerate() {
                 // proper aligment is assumed here
                 let mut idx = unsafe {
@@ -28,7 +29,7 @@ macro_rules! new_test {
                 let input = &inputs[(idx[0][0] as usize)..(idx[0][1] as usize)];
                 let output = &outputs[
                     (idx[1][0] as usize)..(idx[1][1] as usize)];
-                if let Some(desc) = $test_func::<$digest>(input, output) {
+                if let Some(desc) = $test_func(hasher, input, output) {
                     panic!("\n\
                         Failed test №{}: {}\n\
                         input: [{}..{}]\t{:?}\n\
@@ -44,7 +45,8 @@ macro_rules! new_test {
     }
 }
 
-pub fn digest_test<D>(input: &[u8], output: &[u8]) -> Option<&'static str>
+pub fn digest_test<D>(hasher: D, input: &[u8], output: &[u8])
+    -> Option<&'static str>
     where D: Digest + Debug + Clone
 {
     let mut sh = D::default();
