@@ -173,7 +173,9 @@ pub fn run_xof_tests<D>(tests: &[Test])
 }
 */
 
-pub fn run_1mil_a_test<D: Digest + Default + Debug + Clone>(expected: &[u8]) {
+pub fn run_1mil_a_test<D>(expected: &[u8])
+    where D: super::Digest + Default + Debug + Clone
+{
     use super::Digest;
 
     let mut sh = D::default();
