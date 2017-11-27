@@ -268,9 +268,9 @@ macro_rules! bench {
         use test::Bencher;
         use digest::Digest;
 
-        bench_digest!(bench1_10,    $engine, 10);
-        bench_digest!(bench2_100,   $engine, 100);
-        bench_digest!(bench3_1000,  $engine, 1000);
-        bench_digest!(bench4_10000, $engine, 10000);
+        bench!(bench1_10,    $engine, 10);
+        bench!(bench2_100,   $engine, 100);
+        bench!(bench3_1000,  $engine, 1000);
+        bench!(bench4_10000, $engine, 10000);
     }
 }
