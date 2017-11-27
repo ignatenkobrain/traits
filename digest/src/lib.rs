@@ -90,6 +90,7 @@ pub trait ExtendableOutput {
 /// Implements `std::io::Write` trait for implementator of `Input`
 macro_rules! impl_write {
     ($hasher:ident) => {
+        #[cfg(feature = "std")]
         impl ::std::io::Write for $hasher {
             fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
                 self.process(buf);
