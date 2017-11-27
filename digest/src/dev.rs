@@ -1,4 +1,4 @@
-use super::{Digest, Input, VariableOutput, ExtendableOutput, XofReader};
+//use super::{Digest, Input, VariableOutput, ExtendableOutput, XofReader};
 use core::fmt::Debug;
 
 
@@ -174,6 +174,8 @@ pub fn run_xof_tests<D>(tests: &[Test])
 */
 
 pub fn run_1mil_a_test<D: Digest + Default + Debug + Clone>(expected: &[u8]) {
+    use super::Digest;
+
     let mut sh = D::default();
     for _ in 0..50_000 {
         sh.input(&[b'a'; 10]);
