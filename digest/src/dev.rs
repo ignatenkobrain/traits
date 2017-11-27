@@ -82,6 +82,61 @@ pub fn digest_test<D>(hasher: &mut D, input: &[u8], output: &[u8])
     }
     None
 }
+
+pub fn xof_test<D>(hasher: &mut D, input: &[u8], output: &[u8])
+    -> Option<&'static str>
+    where D: Input + ExtendableOutput + Default + Debug + Clone
+{
+    let mut buf = [0u8; 1024];
+    // Test that it works when accepting the message all at once
+    hasher.process(input);
+
+    {
+        let out = &mut buf[..output.len()];
+        hasher.xof_result().read(out);
+
+        if out != output { return Some("whole message"); }
+    }
+
+    // Test if hasher resetted correctly
+    hasher.process(input);
+
+    {
+        let out = &mut buf[..output.len()];
+        hasher.xof_result().read(out);
+
+        if out != output { return Some("whole message after reset"); }
+    }
+
+
+    // Test if hasher accepts message in pieces correctly
+    let len = input.len();
+    let mut left = len;
+    while left > 0 {
+        let take = (left + 1) / 2;
+        hasher.process(&input[len - left..take + len - left]);
+        left = left - take;
+    }
+
+    {
+        let out = &mut buf[..output.len()];
+        hasher.xof_result().read(out);
+        if out != output { return Some("message in pieces"); }
+    }
+
+    // Test reading from reader byte by byte
+    hasher.process(input);
+
+    let mut reader = hasher.xof_result();
+    let out = &mut buf[..output.len()];
+    for chunk in out.chunks_mut(1) {
+        reader.read(chunk);
+    }
+
+    if out != output { return Some("message in pieces"); }
+    None
+}
+
 /*
 #[derive(Debug, Clone)]
 struct Dummy;
