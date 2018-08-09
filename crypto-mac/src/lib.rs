@@ -3,20 +3,18 @@
 extern crate constant_time_eq;
 pub extern crate generic_array;
 
+#[cfg(feature = "std")]
+extern crate std;
+
 use constant_time_eq::constant_time_eq;
 use generic_array::{GenericArray, ArrayLength};
 use generic_array::typenum::Unsigned;
 
+mod errors;
 #[cfg(feature = "dev")]
 pub mod dev;
 
-/// Error type for signaling failed MAC verification
-#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
-pub struct MacError;
-
-/// Error type for signaling invalid key length for MAC initialization
-#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
-pub struct InvalidKeyLength;
+pub use errors::{InvalidKeyLength, MacError};
 
 /// The `Mac` trait defines methods for a Message Authentication algorithm.
 pub trait Mac: core::marker::Sized {

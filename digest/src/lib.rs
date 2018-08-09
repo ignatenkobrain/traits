@@ -4,17 +4,19 @@
 //! By default std functionality in this crate disabled. (e.g. method for
 //! hashing `Read`ers) To enable it turn on `std` feature in your `Cargo.toml`
 //! for this crate.
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
 pub extern crate generic_array;
 
 #[cfg(feature = "std")]
-use std as core;
+extern crate std;
 use generic_array::{GenericArray, ArrayLength};
 
 mod digest;
+mod errors;
 #[cfg(feature = "dev")]
 pub mod dev;
 
+pub use errors::{InvalidOutputSize, InvalidBufferLength};
 pub use digest::Digest;
 
 /// Trait for processing input data
@@ -37,14 +39,6 @@ pub trait FixedOutput {
     /// Retrieve result and reset hasher instance.
     fn fixed_result(&mut self) -> GenericArray<u8, Self::OutputSize>;
 }
-
-/// The error type for variable hasher initialization
-#[derive(Clone, Copy, Debug, Default)]
-pub struct InvalidOutputSize;
-
-/// The error type for variable hasher result
-#[derive(Clone, Copy, Debug, Default)]
-pub struct InvalidBufferLength;
 
 /// Trait for returning digest result with the varaible size
 pub trait VariableOutput: core::marker::Sized {

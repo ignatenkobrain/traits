@@ -1,23 +1,20 @@
 [package]
-name = "digest"
-version = "0.8.0"
+name = "stream-cipher"
+version = "0.1.1"
 authors = ["RustCrypto Developers"]
 license = "MIT OR Apache-2.0"
-description = "Traits for cryptographic hash functions"
-documentation = "https://docs.rs/digest"
+description = "Stream cipher traits"
+documentation = "https://docs.rs/stream-cipher"
 repository = "https://github.com/RustCrypto/traits"
-keywords = ["digest", "crypto", "hash"]
+keywords = ["crypto", "stream-cipher", "trait"]
 categories = ["cryptography", "no-std"]
 
 [dependencies]
 generic-array = "0.9"
 
 [features]
-std = []
 dev = []
+std = []
 
 [badges]
 travis-ci = { repository = "RustCrypto/traits" }
-
-[package.metadata.docs.rs]
-features = [ "std" ]
