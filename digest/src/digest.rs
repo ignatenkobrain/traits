@@ -1,10 +1,6 @@
 use super::{Input, FixedOutput};
 use generic_array::GenericArray;
 use generic_array::typenum::Unsigned;
-#[cfg(feature = "std")]
-use std::io;
-
-type Output<N> = GenericArray<u8, N>;
 
 /// The `Digest` trait specifies an interface common for digest functions.
 ///
@@ -22,9 +18,14 @@ pub trait Digest: Input + FixedOutput + Default {
         self.process(buf);
     }
 
-    /// Retrieve result and reset hasher instance
-    fn result(&mut self) -> Output<Self::OutputSize> {
+    /// Retrieve result and consume hasher instance
+    fn result(self) -> GenericArray<u8, Self::OutputSize> {
         self.fixed_result()
+    }
+
+    /// Retrieve result and reset hasher instance
+    fn result_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
+        self.fixed_result_reset()
     }
 
     /// Get output size of the hasher
@@ -41,50 +42,10 @@ pub trait Digest: Input + FixedOutput + Default {
     /// println!("{:x}", sha2::Sha256::digest(b"Hello world"));
     /// ```
     #[inline]
-    fn digest(data: &[u8]) -> Output<Self::OutputSize> {
+    fn digest(data: &[u8]) -> GenericArray<u8, Self::OutputSize> {
         let mut hasher = Self::default();
         hasher.input(data);
         hasher.fixed_result()
-    }
-
-    /// Convenience function to compute hash of the string. It's equivalent to
-    /// `digest(input_string.as_bytes())`.
-    #[inline]
-    fn input_str(str: &str) -> Output<Self::OutputSize> {
-        Self::digest(str.as_bytes())
-    }
-
-    /// Convenience function which takes `std::io::Read` as a source and computes
-    /// value of digest function `D`, e.g. SHA-2, SHA-3, BLAKE2, etc. using 1 KB
-    /// blocks.
-    ///
-    /// Usage example:
-    ///
-    /// ```rust,ignore
-    /// use std::fs;
-    /// use sha2::{Sha256, Digest};
-    ///
-    /// let mut file = fs::File::open("Cargo.toml")?;
-    /// let result = Sha256::digest_reader(&mut file)?;
-    /// println!("{:x}", result);
-    /// ```
-    #[cfg(feature = "std")]
-    #[inline]
-    fn digest_reader(source: &mut io::Read)
-        -> io::Result<Output<Self::OutputSize>>
-    {
-        let mut hasher = Self::default();
-
-        let mut buffer = [0u8; 1024];
-        loop {
-            let bytes_read = source.read(&mut buffer)?;
-            hasher.input(&buffer[..bytes_read]);
-            if bytes_read == 0 {
-                break;
-            }
-        }
-
-        Ok(hasher.result())
     }
 }
 

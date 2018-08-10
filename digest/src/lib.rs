@@ -16,7 +16,7 @@ mod errors;
 #[cfg(feature = "dev")]
 pub mod dev;
 
-pub use errors::{InvalidOutputSize, InvalidBufferLength};
+pub use errors::InvalidOutputSize;
 pub use digest::Digest;
 
 /// Trait for processing input data
@@ -33,15 +33,25 @@ pub trait BlockInput {
 }
 
 /// Trait for returning digest result with the fixed size
-pub trait FixedOutput {
+pub trait FixedOutput: Default {
     type OutputSize: ArrayLength<u8>;
 
+    /// Retrieve result and consume hasher instance.
+    fn fixed_result(self) -> GenericArray<u8, Self::OutputSize>;
+
     /// Retrieve result and reset hasher instance.
-    fn fixed_result(&mut self) -> GenericArray<u8, Self::OutputSize>;
+    ///
+    /// Some implementations may provide more optmized implementations of this
+    /// method compared to the default one.
+    fn fixed_result_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
+        let mut hasher = Default::default();
+        core::mem::swap(self, &mut hasher);
+        hasher.fixed_result()
+    }
 }
 
 /// Trait for returning digest result with the varaible size
-pub trait VariableOutput: core::marker::Sized {
+pub trait VariableOutput: core::marker::Sized + Default {
     /// Create new hasher instance with given output size. Will return
     /// `Err(InvalidOutputSize)` in case if hasher can not work with the given
     /// output size. Will always return an error if output size equals to zero.
@@ -50,13 +60,28 @@ pub trait VariableOutput: core::marker::Sized {
     /// Get output size of the hasher instance provided to the `new` method
     fn output_size(&self) -> usize;
 
-    /// Retrieve result into provided buffer and reset hasher instance.
+    /// Retrieve result via closure and consume hasher.
     ///
-    /// Length of the buffer must be equal to output size provided to the `new`
-    /// method, otherwise `Err(InvalidBufferLength)` will be returned without
-    /// resetting hasher.
-    fn variable_result(&mut self, buffer: &mut [u8])
-        -> Result<(), InvalidBufferLength>;
+    /// Closure is guaranteed to be called, length of the buffer passed to it
+    /// will be equal to `output_size`.
+    fn variable_result<F: FnOnce(&[u8])>(self, f: F);
+
+    /// Retrieve result via closure and reset hasher.
+    ///
+    /// Closure is guaranteed to be called, length of the buffer passed to it
+    /// will be equal to `output_size`.
+    fn variable_result_reset<F: FnOnce(&[u8])>(&mut self, f: F) {
+        let mut hasher = Default::default();
+        core::mem::swap(self, &mut hasher);
+        hasher.variable_result(f);
+    }
+
+    /// Retrieve result into vector and consume hasher instance.
+    #[cfg(feature = "std")]
+    fn vec_result(self, buffer: &mut [u8]) -> Vec<u8> {
+        let mut buf = Vec::with_capacity(self.output_size());
+        self.variable_result(|res| buf.extend_with(res));
+    }
 }
 
 /// Trait for decribing readers which are used to extract extendable output
