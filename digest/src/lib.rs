@@ -60,7 +60,7 @@ pub trait VariableOutput: core::marker::Sized {
 
     /// Retrieve result into vector and consume hasher instance.
     #[cfg(feature = "std")]
-    fn vec_result(self, buffer: &mut [u8]) -> Vec<u8> {
+    fn vec_result(self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.output_size());
         self.variable_result(|res| buf.extend_from_slice(res));
         buf

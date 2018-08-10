@@ -1,4 +1,4 @@
-use super::{Digest, Input, VariableOutput, ExtendableOutput, XofReader};
+use super::{Digest, Input, VariableOutput, ExtendableOutput, Reset, XofReader};
 use core::fmt::Debug;
 
 #[macro_export]
@@ -42,7 +42,7 @@ macro_rules! new_test {
 
 pub fn digest_test<D>(input: &[u8], output: &[u8])
     -> Option<&'static str>
-    where D: Digest + Debug + Clone
+    where D: Digest + Debug + Reset + Clone
 {
     let mut hasher = D::new();
     // Test that it works when accepting the message all at once
@@ -82,7 +82,7 @@ pub fn digest_test<D>(input: &[u8], output: &[u8])
 
 pub fn xof_test<D>(input: &[u8], output: &[u8])
     -> Option<&'static str>
-    where D: Input + ExtendableOutput + Default + Debug + Clone
+    where D: Input + ExtendableOutput + Default + Debug + Reset  + Clone
 {
     let mut hasher = D::default();
     let mut buf = [0u8; 1024];
@@ -137,7 +137,7 @@ pub fn xof_test<D>(input: &[u8], output: &[u8])
 
 pub fn variable_test<D>(input: &[u8], output: &[u8])
     -> Option<&'static str>
-    where D: Input + VariableOutput + Debug + Clone
+    where D: Input + VariableOutput  + Reset + Debug + Clone
 {
     let mut hasher = D::new(output.len()).unwrap();
     let mut buf = [0u8; 128];
