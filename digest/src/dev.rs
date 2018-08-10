@@ -1,7 +1,6 @@
 use super::{Digest, Input, VariableOutput, ExtendableOutput, XofReader};
 use core::fmt::Debug;
 
-
 #[macro_export]
 macro_rules! new_test {
     ($name:ident, $test_name:expr, $hasher:ty, $test_func:ident) => {
@@ -19,15 +18,14 @@ macro_rules! new_test {
             for (i, chunk) in index.chunks(2*2*2).enumerate() {
                 // proper aligment is assumed here
                 let mut idx = unsafe {
-                    *(chunk.as_ptr() as *const [[u16; 2]; 2])
+                    *(chunk.as_ptr() as *const [u16; 4])
                 };
                 // convert to LE for BE machine
                 for val in idx.iter_mut() {
-                    for i in val.iter_mut() { *i = i.to_le(); }
+                    *i = i.to_le();
                 }
-                let input = &inputs[(idx[0][0] as usize)..(idx[0][1] as usize)];
-                let output = &outputs[
-                    (idx[1][0] as usize)..(idx[1][1] as usize)];
+                let input = &inputs[(idx[0] as usize)..(idx[1] as usize)];
+                let output = &outputs[(idx[2] as usize)..(idx[3] as usize)];
                 if let Some(desc) = $test_func::<$hasher>(input, output) {
                     panic!("\n\
                         Failed test №{}: {}\n\
