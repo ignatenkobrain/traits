@@ -151,7 +151,7 @@ pub fn variable_test<D>(input: &[u8], output: &[u8])
 
     // Test if reset works correctly
     hasher.process(input);
-    hasher.variable_result(buf).unwrap();
+    hasher.variable_result(|res| buf.copy_from_slice(res));
     if buf != output { return Some("whole message after reset"); }
 
     // Test that it works when accepting the message in pieces
@@ -163,14 +163,14 @@ pub fn variable_test<D>(input: &[u8], output: &[u8])
         hasher.process(&input[len - left..take + len - left]);
         left = left - take;
     }
-    hasher.variable_result_reset(buf).unwrap();
+    hasher.variable_result_reset(|res| buf.copy_from_slice(res));
     if buf != output { return Some("message in pieces"); }
 
     // Test processing byte-by-byte
     for chunk in input.chunks(1) {
         hasher.process(chunk)
     }
-    hasher.variable_result(buf).unwrap();
+    hasher.variable_result(|res| buf.copy_from_slice(res));
     if buf != output { return Some("message byte-by-byte"); }
     None
 }

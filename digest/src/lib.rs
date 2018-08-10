@@ -6,10 +6,12 @@
 //! for this crate.
 #![no_std]
 pub extern crate generic_array;
-
 #[cfg(feature = "std")]
 extern crate std;
+
 use generic_array::{GenericArray, ArrayLength};
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 mod digest;
 mod errors;
@@ -79,9 +81,8 @@ pub trait VariableOutput: core::marker::Sized + Default {
     /// Retrieve result into vector and consume hasher instance.
     #[cfg(feature = "std")]
     fn vec_result(self, buffer: &mut [u8]) -> Vec<u8> {
-        use std::vec::Vec;
         let mut buf = Vec::with_capacity(self.output_size());
-        self.variable_result(|res| buf.extend_with(res));
+        self.variable_result(|res| buf.extend_from_slice(res));
     }
 }
 
@@ -95,11 +96,18 @@ pub trait XofReader {
 /// Trait which describes extendable output (XOF) of hash functions. Using this
 /// trait you first need to get structure which implements `XofReader`, using
 /// which you can read extendable output.
-pub trait ExtendableOutput {
+pub trait ExtendableOutput: Default {
     type Reader: XofReader;
 
+    /// Retrieve XOF reader and consume hasher instance.
+    fn xof_result(self) -> Self::Reader;
+
     /// Retrieve XOF reader and reset hasher instance.
-    fn xof_result(&mut self) -> Self::Reader;
+    fn xof_result_reset(&mut self) -> Self::Reader {
+        let mut hasher = Default::default();
+        core::mem::swap(self, &mut hasher);
+        hasher.xof_result()
+    }
 }
 
 #[macro_export]
