@@ -77,30 +77,17 @@ pub trait XofReader {
 /// Trait which describes extendable output (XOF) of hash functions. Using this
 /// trait you first need to get structure which implements `XofReader`, using
 /// which you can read extendable output.
-pub trait ExtendableOutput: Reset {
+pub trait ExtendableOutput {
     type Reader: XofReader;
 
     /// Retrieve XOF reader and consume hasher instance.
     fn xof_result(self) -> Self::Reader;
-
-    /// Retrieve XOF reader and reset hasher instance.
-    fn xof_result_reset(&mut self) -> Self::Reader {
-        self.reset().xof_result()
-    }
 }
 
 /// Trait for resetting hash instances
 pub trait Reset {
     /// Reset hasher instance to its initial state and return previous state.
     fn reset(&mut self) -> Self;
-}
-
-impl<T: Default> Reset for T {
-    fn reset(&mut self) -> Self {
-        let mut temp = Self::default();
-        core::mem::swap(self, &mut temp);
-        temp
-    }
 }
 
 #[macro_export]

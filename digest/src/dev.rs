@@ -47,7 +47,7 @@ pub fn digest_test<D>(input: &[u8], output: &[u8])
     let mut hasher = D::new();
     // Test that it works when accepting the message all at once
     hasher.input(input);
-    if hasher.result_reset().as_slice() != output {
+    if hasher.reset().result().as_slice() != output {
         return Some("whole message");
     }
 
@@ -66,7 +66,7 @@ pub fn digest_test<D>(input: &[u8], output: &[u8])
         hasher.input(&input[len - left..take + len - left]);
         left = left - take;
     }
-    if hasher.result_reset().as_slice() != output {
+    if hasher.reset().result().as_slice() != output {
         return Some("message in pieces");
     }
 
@@ -91,7 +91,7 @@ pub fn xof_test<D>(input: &[u8], output: &[u8])
 
     {
         let out = &mut buf[..output.len()];
-        hasher.xof_result_reset().read(out);
+        hasher.reset().xof_result().read(out);
 
         if out != output { return Some("whole message"); }
     }
@@ -118,7 +118,7 @@ pub fn xof_test<D>(input: &[u8], output: &[u8])
 
     {
         let out = &mut buf[..output.len()];
-        hasher.xof_result_reset().read(out);
+        hasher.reset().xof_result().read(out);
         if out != output { return Some("message in pieces"); }
     }
 
@@ -144,7 +144,7 @@ pub fn variable_test<D>(input: &[u8], output: &[u8])
     let buf = &mut buf[..output.len()];
     // Test that it works when accepting the message all at once
     hasher.process(input);
-    hasher.variable_result_reset(|res| buf.copy_from_slice(res));
+    hasher.reset().variable_result(|res| buf.copy_from_slice(res));
     if buf != output { return Some("whole message"); }
 
     // Test if reset works correctly
@@ -161,7 +161,7 @@ pub fn variable_test<D>(input: &[u8], output: &[u8])
         hasher.process(&input[len - left..take + len - left]);
         left = left - take;
     }
-    hasher.variable_result_reset(|res| buf.copy_from_slice(res));
+    hasher.reset().variable_result(|res| buf.copy_from_slice(res));
     if buf != output { return Some("message in pieces"); }
 
     // Test processing byte-by-byte

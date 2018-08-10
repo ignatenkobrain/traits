@@ -1,12 +1,12 @@
-use super::{Input, FixedOutput};
+use super::{Input, FixedOutput, Reset};
 use generic_array::GenericArray;
 use generic_array::typenum::Unsigned;
 
 /// The `Digest` trait specifies an interface common for digest functions.
 ///
-/// It's a convenience wrapper around `Input`, `FixedOutput` and `Default`
-/// traits. It also provides additional convenience methods.
-pub trait Digest: Input + FixedOutput + Default {
+/// It's a convenience wrapper around `Input`, `FixedOutput`, `Reset` and
+/// `Default` traits. It also provides additional convenience methods.
+pub trait Digest: Input + FixedOutput + Reset + Default {
     /// Create new hasher instance
     fn new() -> Self {
         Self::default()
@@ -25,7 +25,7 @@ pub trait Digest: Input + FixedOutput + Default {
 
     /// Retrieve result and reset hasher instance
     fn result_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
-        self.fixed_result_reset()
+        self.reset().fixed_result()
     }
 
     /// Get output size of the hasher
@@ -49,4 +49,4 @@ pub trait Digest: Input + FixedOutput + Default {
     }
 }
 
-impl<D: Input + FixedOutput + Default> Digest for D {}
+impl<D: Input + FixedOutput + Reset + Default> Digest for D {}
