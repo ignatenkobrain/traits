@@ -83,6 +83,7 @@ pub trait VariableOutput: core::marker::Sized + Default {
     fn vec_result(self, buffer: &mut [u8]) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.output_size());
         self.variable_result(|res| buf.extend_from_slice(res));
+        buf
     }
 }
 
