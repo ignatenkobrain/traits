@@ -35,25 +35,15 @@ pub trait BlockInput {
 }
 
 /// Trait for returning digest result with the fixed size
-pub trait FixedOutput: Default {
+pub trait FixedOutput {
     type OutputSize: ArrayLength<u8>;
 
     /// Retrieve result and consume hasher instance.
     fn fixed_result(self) -> GenericArray<u8, Self::OutputSize>;
-
-    /// Retrieve result and reset hasher instance.
-    ///
-    /// Some implementations may provide more optmized implementations of this
-    /// method compared to the default one.
-    fn fixed_result_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
-        let mut hasher = Default::default();
-        core::mem::swap(self, &mut hasher);
-        hasher.fixed_result()
-    }
 }
 
 /// Trait for returning digest result with the varaible size
-pub trait VariableOutput: core::marker::Sized + Default {
+pub trait VariableOutput: core::marker::Sized {
     /// Create new hasher instance with given output size. Will return
     /// `Err(InvalidOutputSize)` in case if hasher can not work with the given
     /// output size. Will always return an error if output size equals to zero.
@@ -67,16 +57,6 @@ pub trait VariableOutput: core::marker::Sized + Default {
     /// Closure is guaranteed to be called, length of the buffer passed to it
     /// will be equal to `output_size`.
     fn variable_result<F: FnOnce(&[u8])>(self, f: F);
-
-    /// Retrieve result via closure and reset hasher.
-    ///
-    /// Closure is guaranteed to be called, length of the buffer passed to it
-    /// will be equal to `output_size`.
-    fn variable_result_reset<F: FnOnce(&[u8])>(&mut self, f: F) {
-        let mut hasher = Default::default();
-        core::mem::swap(self, &mut hasher);
-        hasher.variable_result(f);
-    }
 
     /// Retrieve result into vector and consume hasher instance.
     #[cfg(feature = "std")]
@@ -97,7 +77,7 @@ pub trait XofReader {
 /// Trait which describes extendable output (XOF) of hash functions. Using this
 /// trait you first need to get structure which implements `XofReader`, using
 /// which you can read extendable output.
-pub trait ExtendableOutput: Default {
+pub trait ExtendableOutput: Reset {
     type Reader: XofReader;
 
     /// Retrieve XOF reader and consume hasher instance.
@@ -105,9 +85,21 @@ pub trait ExtendableOutput: Default {
 
     /// Retrieve XOF reader and reset hasher instance.
     fn xof_result_reset(&mut self) -> Self::Reader {
-        let mut hasher = Default::default();
-        core::mem::swap(self, &mut hasher);
-        hasher.xof_result()
+        self.reset().xof_result()
+    }
+}
+
+/// Trait for resetting hash instances
+pub trait Reset {
+    /// Reset hasher instance to its initial state and return previous state.
+    fn reset(&mut self) -> Self;
+}
+
+impl<T: Default> Reset for T {
+    fn reset(&mut self) -> Self {
+        let mut temp = Self::default();
+        core::mem::swap(self, &mut temp);
+        temp
     }
 }
 
