@@ -46,10 +46,10 @@ pub fn digest_test<D>(input: &[u8], output: &[u8])
     -> Option<&'static str>
     where D: Digest + Debug + Clone
 {
-    let mut hasher = D::default();
+    let mut hasher = D::new();
     // Test that it works when accepting the message all at once
     hasher.input(input);
-    if hasher.result().as_slice() != output {
+    if hasher.result_reset().as_slice() != output {
         return Some("whole message");
     }
 
@@ -60,6 +60,7 @@ pub fn digest_test<D>(input: &[u8], output: &[u8])
     }
 
     // Test that it works when accepting the message in pieces
+    let mut hasher = D::new();
     let len = input.len();
     let mut left = len;
     while left > 0 {
@@ -67,7 +68,7 @@ pub fn digest_test<D>(input: &[u8], output: &[u8])
         hasher.input(&input[len - left..take + len - left]);
         left = left - take;
     }
-    if hasher.result().as_slice() != output {
+    if hasher.result_reset().as_slice() != output {
         return Some("message in pieces");
     }
 
@@ -92,7 +93,7 @@ pub fn xof_test<D>(input: &[u8], output: &[u8])
 
     {
         let out = &mut buf[..output.len()];
-        hasher.xof_result().read(out);
+        hasher.xof_result_reset().read(out);
 
         if out != output { return Some("whole message"); }
     }
@@ -107,8 +108,8 @@ pub fn xof_test<D>(input: &[u8], output: &[u8])
         if out != output { return Some("whole message after reset"); }
     }
 
-
     // Test if hasher accepts message in pieces correctly
+    let mut hasher = D::default();
     let len = input.len();
     let mut left = len;
     while left > 0 {
@@ -119,7 +120,7 @@ pub fn xof_test<D>(input: &[u8], output: &[u8])
 
     {
         let out = &mut buf[..output.len()];
-        hasher.xof_result().read(out);
+        hasher.xof_result_reset().read(out);
         if out != output { return Some("message in pieces"); }
     }
 
@@ -145,7 +146,7 @@ pub fn variable_test<D>(input: &[u8], output: &[u8])
     let buf = &mut buf[..output.len()];
     // Test that it works when accepting the message all at once
     hasher.process(input);
-    hasher.variable_result(buf).unwrap();
+    hasher.variable_result_reset(|res| buf.copy_from_slice(res));
     if buf != output { return Some("whole message"); }
 
     // Test if reset works correctly
@@ -154,6 +155,7 @@ pub fn variable_test<D>(input: &[u8], output: &[u8])
     if buf != output { return Some("whole message after reset"); }
 
     // Test that it works when accepting the message in pieces
+    let mut hasher = D::new(output.len()).unwrap();
     let len = input.len();
     let mut left = len;
     while left > 0 {
@@ -161,7 +163,7 @@ pub fn variable_test<D>(input: &[u8], output: &[u8])
         hasher.process(&input[len - left..take + len - left]);
         left = left - take;
     }
-    hasher.variable_result(buf).unwrap();
+    hasher.variable_result_reset(buf).unwrap();
     if buf != output { return Some("message in pieces"); }
 
     // Test processing byte-by-byte
