@@ -21,9 +21,7 @@ macro_rules! new_test {
                     *(chunk.as_ptr() as *const [u16; 4])
                 };
                 // convert to LE for BE machine
-                for val in idx.iter_mut() {
-                    *i = i.to_le();
-                }
+                for val in idx.iter_mut() { *val = val.to_le(); }
                 let input = &inputs[(idx[0] as usize)..(idx[1] as usize)];
                 let output = &outputs[(idx[2] as usize)..(idx[3] as usize)];
                 if let Some(desc) = $test_func::<$hasher>(input, output) {
@@ -32,8 +30,8 @@ macro_rules! new_test {
                         input: [{}..{}]\t{:?}\n\
                         output: [{}..{}]\t{:?}\n",
                         i, desc,
-                        idx[0][0], idx[0][1], input,
-                        idx[1][0], idx[1][1], output,
+                        idx[0], idx[1], input,
+                        idx[2], idx[3], output,
                     );
                 }
             }
